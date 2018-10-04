@@ -1,0 +1,489 @@
+#THS SCRIPT IS A COMPILATION OF "PM MERGE" AND "OZONE WIND MERGE"
+#BASED ON R SCRIPT All_Merge.R
+#IT CREATES A DATA FRAME FOR ALL OZONE, PM10, & PM2.5 VALUES FOR ALL SITES, ALL YEARS
+#FROM 2006 TO 2016 AND THE DAILY AVERAGE WIND SPEED/DIRECTION FOR THOSE SITES. 
+
+
+
+
+
+
+
+#Read PM2.5 data files
+PM2006 <- read.csv ("D:/Dissertation Data/Air Quality/PM25/PM25_PICKDATA_2006-12-31.csv")
+PM2007 <- read.csv ("D:/Dissertation Data/Air Quality/PM25/PM25_PICKDATA_2007-12-31.csv")
+PM2008 <- read.csv ("D:/Dissertation Data/Air Quality/PM25/PM25_PICKDATA_2008-12-31.csv")
+PM2009 <- read.csv ("D:/Dissertation Data/Air Quality/PM25/PM25_PICKDATA_2009-12-31.csv")
+PM2010 <- read.csv ("D:/Dissertation Data/Air Quality/PM25/PM25_PICKDATA_2010-12-31.csv")
+PM2011 <- read.csv ("D:/Dissertation Data/Air Quality/PM25/PM25_PICKDATA_2011-12-31.csv")
+PM2012 <- read.csv ("D:/Dissertation Data/Air Quality/PM25/PM25_PICKDATA_2012-12-31.csv")
+PM2013 <- read.csv ("D:/Dissertation Data/Air Quality/PM25/PM25_PICKDATA_2013-12-31.csv")
+PM2014 <- read.csv ("D:/Dissertation Data/Air Quality/PM25/PM25_PICKDATA_2014-12-31.csv")
+PM2015 <- read.csv ("D:/Dissertation Data/Air Quality/PM25/PM25_PICKDATA_2015-12-31.csv")
+PM2016 <- read.csv ("D:/Dissertation Data/Air Quality/PM25/PM25_PICKDATA_2016-12-31.csv")
+
+#drop bottom (metadata) rows
+PM2006 <- PM2006[-c(381:391), ]
+PM2007 <- PM2007[-c(384:394), ]
+PM2008 <- PM2008[-c(376:386), ]
+PM2009 <- PM2009[-c(352:362), ]
+PM2010 <- PM2010[-c(469:479), ]
+PM2011 <- PM2011[-c(448:458), ]
+PM2012 <- PM2012[-c(463:473), ]
+PM2013 <- PM2013[-c(444:454), ]
+PM2014 <- PM2014[-c(645:655), ]
+PM2015 <- PM2015[-c(635:645), ]
+PM2016 <- PM2016[-c(672:682), ]
+
+
+#merge all data sets
+pm25 <- rbind (PM2006, PM2007, PM2008, PM2009, PM2010,
+               PM2011, PM2012, PM2013, PM2014, PM2015, PM2016)
+
+
+#drop extra columns
+pm25 <- pm25[ , -which(names(pm25) %in% c("monitor", "start_hour", "variable", "units", 
+                                          "quality", "prelim", "obs_type", "flag"))]
+
+##############################################################################################################################
+
+#Read PM10 data files
+PM2006 <- read.csv ("D:/Dissertation Data/Air Quality/PM10/PM10_L_PICKDATA_2006-12-31.csv")
+PM2007 <- read.csv ("D:/Dissertation Data/Air Quality/PM10/PM10_L_PICKDATA_2007-12-31.csv")
+PM2008 <- read.csv ("D:/Dissertation Data/Air Quality/PM10/PM10_L_PICKDATA_2008-12-31.csv")
+PM2009 <- read.csv ("D:/Dissertation Data/Air Quality/PM10/PM10_L_PICKDATA_2009-12-31.csv")
+PM2010 <- read.csv ("D:/Dissertation Data/Air Quality/PM10/PM10_L_PICKDATA_2010-12-31.csv")
+PM2011 <- read.csv ("D:/Dissertation Data/Air Quality/PM10/PM10_L_PICKDATA_2011-12-31.csv")
+PM2012 <- read.csv ("D:/Dissertation Data/Air Quality/PM10/PM10_L_PICKDATA_2012-12-31.csv")
+PM2013 <- read.csv ("D:/Dissertation Data/Air Quality/PM10/PM10_L_PICKDATA_2013-12-31.csv")
+PM2014 <- read.csv ("D:/Dissertation Data/Air Quality/PM10/PM10_L_PICKDATA_2014-12-31.csv")
+PM2015 <- read.csv ("D:/Dissertation Data/Air Quality/PM10/PM10_L_PICKDATA_2015-12-31.csv")
+PM2016 <- read.csv ("D:/Dissertation Data/Air Quality/PM10/PM10_L_PICKDATA_2016-12-31.csv")
+
+#drop bottom (metadata) rows
+PM2006 <- PM2006[-c(352:362), ]
+PM2007 <- PM2007[-c(327:337), ]
+PM2008 <- PM2008[-c(301:311), ]
+PM2009 <- PM2009[-c(301:311), ]
+PM2010 <- PM2010[-c(302:312), ]
+PM2011 <- PM2011[-c(300:310), ]
+PM2012 <- PM2012[-c(297:307), ]
+PM2013 <- PM2013[-c(300:310), ]
+PM2014 <- PM2014[-c(284:294), ]
+PM2015 <- PM2015[-c(294:304), ]
+PM2016 <- PM2016[-c(126:136), ]
+
+
+#merge all data sets
+pm10 <- rbind (PM2006, PM2007, PM2008, PM2009, PM2010,
+               PM2011, PM2012, PM2013, PM2014, PM2015, PM2016)
+
+
+#drop extra columns
+pm10 <- pm10[ , -which(names(pm10) %in% c("monitor", "start_hour", "variable", "units", 
+                                          "quality", "prelim", "obs_type", "flag"))]
+
+###############################################################################################################
+
+pm25 <- pm25[ , -which(names(pm25) %in% c("monitoring_id"))]
+pm10 <- pm10[ , -which(names(pm10) %in% c("monitoring_id"))]
+
+colnames(pm25) <- c("site", "date", "pm25", "name", "latitude", "longitude")
+colnames(pm10) <- c("site", "date", "pm10", "name", "latitude", "longitude")
+
+str(pm25)
+
+pm25$name <- as.factor(pm25$name)
+
+pm <- merge(x = pm25, y = pm10, by = c("date","site","name","latitude","longitude"), all.y = TRUE) # new df has all pm 10/2.5 for all sites
+head(pm)
+str(pm)
+pm$date <- as.POSIXct(pm$date)
+
+
+###############################################################################################################################
+############################################ ADD WIND/OZONE DATA ####################################################################
+###############################################################################################################################
+
+
+#This script is a compilation of merges for wind and ozone..
+#It takes the wind speed and direction data downloaded from the Meteorology Data Query Tool
+#from 2006 to 2016 and creates a merged file for all observations, all years
+#and takes ozone data downloaded from the Air Quality Data Query Tool from 2006 to 2016.
+#The final data file includes the daily average wind speed, wind direction, and ozone values for each station, each day.
+
+####################################################################################################
+
+#2006 wind data
+Wind20061 <- read.csv ("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2006-3-31.csv", 
+                       stringsAsFactors = FALSE)
+Wind20062 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2006-6-30.csv", 
+                      stringsAsFactors = FALSE)
+Wind20063 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2006-10-31.csv", 
+                      stringsAsFactors = FALSE)
+Wind20064 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2006-12-31.csv", 
+                      stringsAsFactors = FALSE)
+
+#2007 wind data
+Wind20071 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2007-3-31.csv", 
+                      stringsAsFactors = FALSE)
+Wind20072 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2007-6-30.csv", 
+                      stringsAsFactors = FALSE)
+Wind20073 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2007-10-31.csv", 
+                      stringsAsFactors = FALSE)
+Wind20074 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2007-12-31.csv", 
+                      stringsAsFactors = FALSE)
+
+#2008 wind data
+Wind20081 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2008-3-31.csv", 
+                      stringsAsFactors = FALSE)
+Wind20082 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2008-6-30.csv", 
+                      stringsAsFactors = FALSE)
+Wind20083 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2008-10-31.csv", 
+                      stringsAsFactors = FALSE)
+Wind20084 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2008-12-31.csv", 
+                      stringsAsFactors = FALSE)
+
+#2009 wind data
+Wind20091 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2009-3-31.csv", 
+                      stringsAsFactors = FALSE)
+Wind20092 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2009-6-30.csv", 
+                      stringsAsFactors = FALSE)
+Wind20093 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2009-10-31.csv", 
+                      stringsAsFactors = FALSE)
+Wind20094 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2009-12-31.csv", 
+                      stringsAsFactors = FALSE)
+
+#2010 wind data
+Wind20101 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2010-3-31.csv", 
+                      stringsAsFactors = FALSE)
+Wind20102 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2010-6-30.csv", 
+                      stringsAsFactors = FALSE)
+Wind20103 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2010-10-31.csv", 
+                      stringsAsFactors = FALSE)
+Wind20104 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2010-12-31.csv", 
+                      stringsAsFactors = FALSE)
+
+#2011 wind data
+Wind20111 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2011-3-31.csv", 
+                      stringsAsFactors = FALSE)
+Wind20112 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2011-6-30.csv", 
+                      stringsAsFactors = FALSE)
+Wind20113 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2011-10-31.csv", 
+                      stringsAsFactors = FALSE)
+Wind20114 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2011-12-31.csv", 
+                      stringsAsFactors = FALSE)
+
+#2012 wind data
+Wind20121 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2012-3-31.csv", 
+                      stringsAsFactors = FALSE)
+Wind20122 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2012-6-30.csv", 
+                      stringsAsFactors = FALSE)
+Wind20123 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2012-10-31.csv", 
+                      stringsAsFactors = FALSE)
+Wind20124 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2012-12-31.csv", 
+                      stringsAsFactors = FALSE)
+
+#2013 wind data
+Wind20131 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2013-3-31.csv", 
+                      stringsAsFactors = FALSE)
+Wind20132 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2013-6-30.csv", 
+                      stringsAsFactors = FALSE)
+Wind20133 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2013-10-31.csv", 
+                      stringsAsFactors = FALSE)
+Wind20134 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2013-12-31.csv", 
+                      stringsAsFactors = FALSE)
+
+#2014 Wind data
+Wind20141 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2014-3-31.csv", 
+                      stringsAsFactors = FALSE)
+Wind20142 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2014-6-30.csv", 
+                      stringsAsFactors = FALSE)
+Wind20143 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2014-10-31.csv", 
+                      stringsAsFactors = FALSE)
+Wind20144 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2014-12-31.csv", 
+                      stringsAsFactors = FALSE)
+
+#2015 wind data
+Wind20151 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2015-3-31.csv", 
+                      stringsAsFactors = FALSE)
+Wind20152 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2015-6-30.csv", 
+                      stringsAsFactors = FALSE)
+Wind20153 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2015-10-31.csv", 
+                      stringsAsFactors = FALSE)
+Wind20154 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2015-12-31.csv", 
+                      stringsAsFactors = FALSE)
+
+#2016 wind data
+Wind20161 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2016-3-31.csv", 
+                      stringsAsFactors = FALSE)
+Wind20162 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2016-6-30.csv", 
+                      stringsAsFactors = FALSE)
+Wind20163 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2016-10-31.csv", 
+                      stringsAsFactors = FALSE)
+Wind20164 <- read.csv("D:/Dissertation Data/Meteorology/Wind/WINSPD_PICKDATA_2016-12-31.csv", 
+                      stringsAsFactors = FALSE)
+
+#merge all data sets
+WindAll <- rbind (Wind20061,Wind20062,Wind20063,Wind20064,
+                  Wind20071,Wind20072,Wind20073,Wind20074,
+                  Wind20081,Wind20082,Wind20083,Wind20084,
+                  Wind20091,Wind20092,Wind20093,Wind20094,
+                  Wind20101,Wind20102,Wind20103,Wind20104,
+                  Wind20111,Wind20112,Wind20113,Wind20114,
+                  Wind20121,Wind20122,Wind20123,Wind20124,
+                  Wind20131,Wind20132,Wind20133,Wind20134,
+                  Wind20141,Wind20142,Wind20143,Wind20144,
+                  Wind20151,Wind20152,Wind20153,Wind20154,
+                  Wind20161,Wind20162,Wind20163,Wind20164)
+
+#drop bottom (metadata rows)
+wind <- WindAll[-c(1668991:1669001), ]
+
+#drop extra columns
+wind <- wind[ , -which(names(wind) %in% c("quality_ws","quality_wd", "met_source", "prelim", 
+                                          "obs_type", "minutes", "flag", 
+                                          "variable", "units"))]
+
+# Take subset of only the data from each Monitoring Site
+wind3173 <- subset(wind, site==3173)
+wind3468 <- subset(wind, site==3468)
+wind5735 <- subset(wind, site==5735)
+wind5774 <- subset(wind, site==5774)
+wind6735 <- subset(wind, site==6735)
+wind5407 <- subset(wind, site==5407)
+wind5410 <- subset(wind, site==5410)
+wind5330 <- subset(wind, site==5330)
+wind2551 <- subset(wind, site==2551)
+wind3135 <- subset(wind, site==3135)
+wind3186 <- subset(wind, site==3186)
+wind3516 <- subset(wind, site==3516)
+wind5747 <- subset(wind, site==5747)
+wind5817 <- subset(wind, site==5817)
+wind6575 <- subset(wind, site==6575)
+wind5408 <- subset(wind, site==5408)
+wind2802 <- subset(wind, site==2802)
+wind2997 <- subset(wind, site==2997)
+wind3143 <- subset(wind, site==3143)
+wind3434 <- subset(wind, site==3434)
+wind3541 <- subset(wind, site==3541)
+wind5724 <- subset(wind, site==5724)
+wind5773 <- subset(wind, site==5773)
+wind5822 <- subset(wind, site==5822)
+wind5409 <- subset(wind, site==5409)
+wind5310 <- subset(wind, site==5310)
+
+
+
+wind <- rbind(wind3173, wind3468, wind5735, wind5774, wind6735, wind5407, wind5410, wind5330,
+              wind2551, wind3135, wind3186, wind3516, wind5747, wind5817, wind6575, wind5408, 
+              wind2802, wind2997, wind3143, wind3434, wind3541, wind5724, wind5773, wind5822, 
+              wind5409, wind5310)
+
+# format what we have as a Date class;
+# First we want to append minute measure to start_hour so we can format as time:
+wind$start_hour <- paste0(wind$start_hour,":00")
+
+# Next combine date and start_hour columns into a new column called date-time
+wind$date <- paste(wind$date, wind$start_hour)
+wind$date <- as.POSIXct(wind$date, format = "%Y-%m-%d %H:%M")
+str(wind$date)
+
+#delete the separate time column
+wind <- subset(wind, select = -c(start_hour))
+
+wind$wd <- as.numeric(wind$wd)
+str(wind)
+
+write.csv(file = "D:/Dissertation Data/Meteorology/Wind/Wind_All.csv", x=wind )
+#####################################################################################################################
+
+#time average function from openair in order to find the average wind magnitude per day
+library(openair)
+
+dailyAvg <- data.frame(timeAverage(wind, avg.time = "day", data.thresh = 0, statistic = "mean",
+                                   type = "site", percentile = NA, start.date = NA, end.date = NA,
+                                   vector.ws = FALSE, fill = TRUE))
+head(dailyAvg)
+
+
+#extract extra columns needed for database and create new data frame
+windextra <- wind[ , -which(names(wind) %in% c("date", "quadrant", "ws", "wd", "latitude", "longitude", "monitoring_id"))]
+
+#merge data frames by common site number to retain site name
+wind.df <- merge(x = dailyAvg, y = windextra[!duplicated(windextra$site), ], by = "site", all.x = TRUE) # new df has daily avg ws/wd
+head(wind.df)
+str(wind.df)
+wind.df$name <- as.factor(wind.df$name)
+
+
+##################################################################################################################################
+################################################             #####################################################################
+################################################ OZONE MERGE #####################################################################
+################################################             #####################################################################
+##################################################################################################################################
+
+
+#Read ozone data files
+O32006 <- read.csv ("D:/Dissertation Data/Air Quality/O3/OZONE_PICKDATA_2006-12-31.csv", stringsAsFactors = FALSE)
+O32007 <- read.csv ("D:/Dissertation Data/Air Quality/O3/OZONE_PICKDATA_2007-12-31.csv", stringsAsFactors = FALSE)
+O32008 <- read.csv ("D:/Dissertation Data/Air Quality/O3/OZONE_PICKDATA_2008-12-31.csv", stringsAsFactors = FALSE)
+O32009 <- read.csv ("D:/Dissertation Data/Air Quality/O3/OZONE_PICKDATA_2009-12-31.csv", stringsAsFactors = FALSE)
+O32010 <- read.csv ("D:/Dissertation Data/Air Quality/O3/OZONE_PICKDATA_2010-12-31.csv", stringsAsFactors = FALSE)
+O32011 <- read.csv ("D:/Dissertation Data/Air Quality/O3/OZONE_PICKDATA_2011-12-31.csv", stringsAsFactors = FALSE)
+O32012 <- read.csv ("D:/Dissertation Data/Air Quality/O3/OZONE_PICKDATA_2012-12-31.csv", stringsAsFactors = FALSE)
+O32013 <- read.csv ("D:/Dissertation Data/Air Quality/O3/OZONE_PICKDATA_2013-12-31.csv", stringsAsFactors = FALSE)
+O32014 <- read.csv ("D:/Dissertation Data/Air Quality/O3/OZONE_PICKDATA_2014-12-31.csv", stringsAsFactors = FALSE)
+O32015 <- read.csv ("D:/Dissertation Data/Air Quality/O3/OZONE_PICKDATA_2015-12-31.csv", stringsAsFactors = FALSE)
+O32016 <- read.csv ("D:/Dissertation Data/Air Quality/O3/OZONE_PICKDATA_2016-12-31.csv", stringsAsFactors = FALSE)
+
+#drop bottom (metadata) rows
+O32006 <- O32006[-c(51263:51273), ]
+O32007 <- O32007[-c(44832:44842), ]
+O32008 <- O32008[-c(41605:41615), ]
+O32009 <- O32009[-c(40561:40571), ]
+O32010 <- O32010[-c(34892:34902), ]
+O32011 <- O32011[-c(31379:31389), ]
+O32012 <- O32012[-c(32772:32782), ]
+O32013 <- O32013[-c(23585:23595), ]
+O32014 <- O32014[-c(24103:24113), ]
+O32015 <- O32015[-c(27991:28001), ]
+O32016 <- O32016[-c(29118:29128), ]
+
+#merge all data sets
+ozone <- rbind (O32006, O32007, O32008, O32009, O32010,
+                O32011, O32012, O32013, O32014, O32015, O32016)
+
+
+#drop extra columns
+ozone <- ozone[ , -which(names(ozone) %in% c("variable", "units", "start_hour",
+                                             "quality", "prelim", "obs_type", "flag"))]
+
+ozone$date <- as.POSIXct(ozone$date, format = "%Y-%m-%d")
+head(ozone)
+str(ozone)
+ozone$site <- as.factor(ozone$site)
+
+#################################################################################################################################
+library(dplyr)
+mean.ozone <- as.data.frame(ozone %>%
+                              group_by(site, date) %>%
+                              summarize(mean.ozone = mean(value, na.rm = TRUE)))
+
+mean.ozone <- as.data.frame(mean.ozone)
+colnames(mean.ozone) <- c("site", "date", "ozone")
+head(mean.ozone)
+#extract extra columns needed for database and create new data frame
+ozoneextra <- ozone[ , -which(names(ozone) %in% c("date", "value"))]
+
+#merge data frames by common site number to retain site name
+ozone.df <- merge(x = mean.ozone, y = ozoneextra[!duplicated(ozoneextra$site), ], by = "site", all.x = TRUE) # new df has daily avg ozone
+head(ozone.df)
+str(ozone.df)
+ozone.df$name <- as.factor(ozone.df$name)
+
+
+wind.df <- wind.df[ , -which(names(wind.df) %in% c("monitoring_id"))]
+ozone.df <- ozone.df[ , -which(names(ozone.df) %in% c("monitoring_id"))]
+
+str(wind.df)
+str(ozone.df)
+
+head(ozone.df)
+head(wind.df)
+
+##################################################################################################################################
+################################################                     ###############################################################
+################################################ PM/WIND/OZONE MERGE ################################################################
+################################################                     ################################################################
+##################################################################################################################################
+
+head(ozone.df)
+head(wind.df)
+str(ozone.df)
+
+ozone.df$date <- as.character.Date(ozone.df$date)
+wind.df$date <- as.character.Date(wind.df$date)
+
+merge1 <- merge(x=ozone.df, y=wind.df, by =c("site", "date", "name", "latitude", "longitude"), all = TRUE)
+
+pm$date <- as.character.Date(pm$date)
+str(pm)
+air.df <- merge(x=merge1, y=pm, by=c("site", "date", "name", "latitude", "longitude"), all = TRUE)
+
+#remove sites: UC-Andrade (data only for some months in 2006)
+air.df <- air.df[ ! air.df$name %in% c("UC-Andrade"), ]
+
+
+####################################################################################################
+#dealing with "NA" in chunks of data for latitude and longitude
+
+
+getLatitude <- function(x) {
+  site <- as.factor(air.df$site)
+  
+  ifelse(site == 2551, 32.79215, 
+  ifelse(site == 2802, 33.64, 
+  ifelse(site == 2997, 32.673811,
+  ifelse(site == 3135, 32.67618,
+  ifelse(site == 3143, 33.03239,
+  ifelse(site == 3173, 32.6742,
+  ifelse(site == 3186, 33.2136,
+  ifelse(site == 3434, 32.990278, 
+  ifelse(site == 3468, 32.90833299,
+  ifelse(site == 3516, 32.973611,
+  ifelse(site == 3541, 32.739722,
+  ifelse(site == 3675, 32.97831,
+  ifelse(site == 5310, 32.8342,
+  ifelse(site == 5330, 32.825,
+  ifelse(site == 5407, 33.35239,
+  ifelse(site == 5408, 33.17638,
+  ifelse(site == 5409, 33.169425,
+  ifelse(site == 5410, 33.272613,
+  ifelse(site == 5724, 33.04399,
+  ifelse(site == 5735, 32.759,
+  ifelse(site == 5747, 32.807,
+  ifelse(site == 5773, 33.327,
+  ifelse(site == 5774, 33.22,
+  ifelse(site == 5817, 33.389,
+  ifelse(site == 5822, 33.0786,
+  ifelse(site == 6575, 32.493, NA
+    ))))))))))))))))))))))))))
+}
+
+getLongitude <- function (x) {
+  
+  site <- as.factor(air.df$site)
+  
+  ifelse(site == 2551, -115.56299, 
+  ifelse(site == 2802, -116.139,
+  ifelse(site == 2997, -115.5163,
+  ifelse(site == 3135, -115.48307,
+  ifelse(site == 3143, -115.62362,
+  ifelse(site == 3173, -115.391,
+  ifelse(site == 3186, -115.545,
+  ifelse(site == 3434, -116.066944, 
+  ifelse(site == 3468, -114.494444,
+  ifelse(site == 3516, -115.173611, 
+  ifelse(site == 3541, -114.883889,
+  ifelse(site == 3675, -115.53904,
+  ifelse(site == 5310, -115.57899,
+  ifelse(site == 5330, -115.661,
+  ifelse(site == 5407, -115.734475,
+  ifelse(site == 5408, -115.62310,
+  ifelse(site == 5409, -115.855896,
+  ifelse(site == 5410, -115.900616,
+  ifelse(site == 5724, -115.415,
+  ifelse(site == 5735, -115.732,
+  ifelse(site == 5747, -115.446,
+  ifelse(site == 5773, -115.95,
+  ifelse(site == 5774,-115.58,
+  ifelse(site == 5817, -114.726,
+  ifelse(site == 5822, -115.661,
+  ifelse(site == 6575, -114.826, NA
+    ))))))))))))))))))))))))))
+}
+
+air.df$latitude <- getLatitude(air.df$site)
+air.df$longitude <- getLongitude(air.df$site)
+write.csv(file = "D:/Dissertation Data/Air_All.csv", x=air.df)
